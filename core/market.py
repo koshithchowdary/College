@@ -11,14 +11,18 @@ def _secret(name):
         import streamlit as st; return st.secrets.get(name,os.getenv(name,""))
     except Exception: return os.getenv(name,"")
 def classify_asset(symbol):
-    raw=symbol.strip().upper(); s=raw.replace("/","").replace("-","")
+    s=symbol.strip().upper().replace("/","").replace("-","")
     crypto_bases={"BTC","ETH","SOL","XRP","ADA","DOGE","BNB","AVAX","LINK","DOT","TRX","SUI"}
     if any(s.startswith(b) and s[len(b):] in {"USD","USDT","USDC","BTC","ETH"} for b in crypto_bases): return "crypto"
     if s.endswith(("USDT","USDC","BUSD")) and len(s)>=6: return "crypto"
     if len(s)==6 and s.isalpha(): return "forex"
     return "stock"
 def normalize_symbol(symbol):
-    s=symbol.strip().upper(); return {"BTC":"BTC-USD","ETH":"ETH-USD","GOLD":"GC=F","S&P500":"^GSPC"}.get(s,s)
+    s=symbol.strip().upper(); aliases={"BTC":"BTC-USD","ETH":"ETH-USD","GOLD":"GC=F","S&P500":"^GSPC"}
+    if s in aliases: return aliases[s]
+    compact=s.replace("/","").replace("-","")
+    if classify_asset(s)=="forex": return compact+"=X"
+    return s
 def _binance_symbol(symbol): return symbol.upper().replace("-","").replace("/","")
 def _binance_interval(interval): return {"1m":"1m","5m":"5m","15m":"15m","30m":"30m","1h":"1h","4h":"4h","1d":"1d"}.get(interval,"1h")
 def fetch_binance(symbol,interval="1h",limit=500):
